@@ -140,6 +140,12 @@ export default {
           }
           for (let j = 0; j < values.length; j++) {
             let value = values[j];
+
+            //URIの場合は無視
+            if(value.startsWith("http")){
+              continue
+            }
+
             fulltext += value + " ";
             if (!index[key][value]) {
               index[key][value] = [];
