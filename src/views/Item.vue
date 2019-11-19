@@ -1,14 +1,21 @@
 
 <template>
   <div>
-    <Header :header="header" :url="return_url" :label="return_label" :u="u" />
+    <Header
+      :header="header"
+      :url="return_url"
+      :label="return_label"
+      :u="u"
+      :description="description"
+    />
 
-    <v-container class="my-5">
+    <v-container class="mt-2 mb-5">
       <SearchForm
         :q="q"
         :collections="collections"
         :collections_query="index.collections ? Object.keys(index.collections) : []"
         :u="u"
+        :search_place_holder="search_place_holder"
       />
 
       <v-row class="fill-height mt-5">
@@ -40,9 +47,11 @@
                   <v-list-item @click="type = 'month'">
                     <v-list-item-title>Month</v-list-item-title>
                   </v-list-item>
+                  <!-- 
                   <v-list-item @click="type = '4day'">
                     <v-list-item-title>4 days</v-list-item-title>
                   </v-list-item>
+                  -->
                 </v-list>
               </v-menu>
             </v-toolbar>
@@ -117,6 +126,8 @@ export default {
       items: [],
       q: null,
       u: null,
+      description: "",
+      search_place_holder: "",
       index: {},
       collections: [],
 
@@ -125,8 +136,8 @@ export default {
       typeToLabel: {
         month: "Month",
         week: "Week",
-        day: "Day",
-        "4day": "4 Days"
+        day: "Day"
+        //"4day": "4 Days"
       },
       focus: "2000-01-01",
       start: null,
@@ -194,51 +205,52 @@ export default {
         : this.collections;
     }
 
-    axios
-      .get(this.u)
-      .then(response => {
-        let result = response.data;
+    axios.get(this.u).then(response => {
+      let result = response.data;
 
-        this.header = result.header;
-        this.footer = result.footer;
-        this.return_url = result.return_url;
-        this.return_label = result.return_label;
+      this.header = result.header;
+      this.footer = result.footer;
+      this.return_url = result.return_url;
+      this.return_label = result.return_label;
 
-        let data = result.data;
-        this.data_all = data;
+      this.description = result.description;
+      this.search_place_holder = result.search_place_holder;
 
-        let index = {
-          fulltext: {}
-        };
+      let data = result.data;
+      this.data_all = data;
 
-        for (let i = 0; i < data.length; i++) {
-          let obj = data[i];
-          let fulltext = "";
+      let index = {
+        fulltext: {}
+      };
 
-          for (let key in obj) {
-            if (!index[key]) {
-              index[key] = {};
-            }
-            let values = obj[key];
-            if (!(values instanceof Array)) {
-              values = [values];
-            }
-            for (let j = 0; j < values.length; j++) {
-              let value = values[j];
-              fulltext += value + " ";
-              if (!index[key][value]) {
-                index[key][value] = [];
-              }
-              index[key][value].push(i);
-            }
+      for (let i = 0; i < data.length; i++) {
+        let obj = data[i];
+        let fulltext = "";
+
+        for (let key in obj) {
+          if (!index[key]) {
+            index[key] = {};
           }
-          index["fulltext"][fulltext] = [i];
+          let values = obj[key];
+          if (!(values instanceof Array)) {
+            values = [values];
+          }
+          for (let j = 0; j < values.length; j++) {
+            let value = values[j];
+            fulltext += value + " ";
+            if (!index[key][value]) {
+              index[key][value] = [];
+            }
+            index[key][value].push(i);
+          }
         }
+        index["fulltext"][fulltext] = [i];
+      }
 
-        this.index = index;
+      this.index = index;
 
-        this.search();
-      })
+      this.search();
+    });
   },
   methods: {
     search() {

@@ -1,14 +1,21 @@
 
 <template>
   <div>
-    <Header :header="header" :url="return_url" :label="return_label" :u="u" />
+    <Header
+      :header="header"
+      :url="return_url"
+      :label="return_label"
+      :u="u"
+      :description="description"
+    />
 
-    <v-container class="my-5">
+    <v-container class="mt-2 mb-5">
       <SearchForm
         :q="q"
         :collections="collections"
         :collections_query="index.collections ? Object.keys(index.collections) : []"
         :u="u"
+        :search_place_holder="search_place_holder"
       />
 
       <v-card class="mt-5">
@@ -17,7 +24,7 @@
             <template v-slot:default>
               <tbody>
                 <tr v-for="(item, index2) in items" :key="index2">
-                  <th>{{ item.year }}</th>
+                  <th>{{ item.year }} ({{item.wareki}})</th>
                   <td class="text-xs-right" v-for="index in 12" :key="index">
                     <!-- <a :href="'list?q='+q+'&date=' + props.item.year + '-' + index + '&type=' + type" v-if="props.item.month[index-1] > 0">{{index}}月 ({{ props.item.month[index-1] }})</a> -->
                     <router-link
@@ -43,6 +50,20 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import SearchForm from "../components/SearchForm";
 
+function toWareki(y) {
+  let s = "";
+  if (y > 1988) {
+    s = "平成" + (y - 1988);
+  } else if (y > 1925) {
+    s = "昭和" + (y - 1925);
+  } else if (y > 1911) {
+    s = "大正" + (y - 1911);
+  } else if (y > 1867) {
+    s = "明治" + (y - 1867);
+  }
+  return s;
+}
+
 export default {
   components: {
     Header,
@@ -59,6 +80,8 @@ export default {
       data_all: [],
       q: "",
       u: null,
+      description: "",
+      search_place_holder: "",
       index: {},
       collections: []
     };
@@ -71,10 +94,10 @@ export default {
   created: function() {
     let param = Object.assign({}, this.$route.query);
 
-    if(!param.u){
-      location.href = "https://github.com/nakamura196/calendar"
+    if (!param.u) {
+      location.href = "https://github.com/nakamura196/calendar";
     }
-    this.u = param.u
+    this.u = param.u;
 
     if (param.param) {
       let query = JSON.parse(param.param);
@@ -85,51 +108,52 @@ export default {
         : this.collections;
     }
 
-    axios
-      .get(this.u)
-      .then(response => {
-        let result = response.data;
+    axios.get(this.u).then(response => {
+      let result = response.data;
 
-        this.header = result.header;
-        this.footer = result.footer;
-        this.return_url = result.return_url;
-        this.return_label = result.return_label;
+      this.header = result.header;
+      this.footer = result.footer;
+      this.return_url = result.return_url;
+      this.return_label = result.return_label;
 
-        let data = result.data;
-        this.data_all = data;
+      this.description = result.description;
+      this.search_place_holder = result.search_place_holder;
 
-        let index = {
-          fulltext: {}
-        };
+      let data = result.data;
+      this.data_all = data;
 
-        for (let i = 0; i < data.length; i++) {
-          let obj = data[i];
-          let fulltext = "";
+      let index = {
+        fulltext: {}
+      };
 
-          for (let key in obj) {
-            if (!index[key]) {
-              index[key] = {};
-            }
-            let values = obj[key];
-            if (!(values instanceof Array)) {
-              values = [values];
-            }
-            for (let j = 0; j < values.length; j++) {
-              let value = values[j];
-              fulltext += value + " ";
-              if (!index[key][value]) {
-                index[key][value] = [];
-              }
-              index[key][value].push(i);
-            }
+      for (let i = 0; i < data.length; i++) {
+        let obj = data[i];
+        let fulltext = "";
+
+        for (let key in obj) {
+          if (!index[key]) {
+            index[key] = {};
           }
-          index["fulltext"][fulltext] = [i];
+          let values = obj[key];
+          if (!(values instanceof Array)) {
+            values = [values];
+          }
+          for (let j = 0; j < values.length; j++) {
+            let value = values[j];
+            fulltext += value + " ";
+            if (!index[key][value]) {
+              index[key][value] = [];
+            }
+            index[key][value].push(i);
+          }
         }
+        index["fulltext"][fulltext] = [i];
+      }
 
-        this.index = index;
+      this.index = index;
 
-        this.search();
-      })
+      this.search();
+    });
   },
   methods: {
     search() {
@@ -177,6 +201,7 @@ export default {
       for (let year = min_year; year <= max_year; year++) {
         let obj = {
           year: year,
+          wareki: toWareki(year),
           month: []
         };
 
