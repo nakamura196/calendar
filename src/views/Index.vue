@@ -24,14 +24,14 @@
             <template v-slot:default>
               <tbody>
                 <tr v-for="(item, index2) in items" :key="index2">
-                  <th>{{ item.year }} ({{item.wareki}})</th>
+                  <th>{{ item.year }}<template v-if="$i18n.locale == 'ja'"> ({{item.wareki}}) 年</template></th>
                   <td class="text-xs-right" v-for="index in 12" :key="index">
                     <!-- <a :href="'list?q='+q+'&date=' + props.item.year + '-' + index + '&type=' + type" v-if="props.item.month[index-1] > 0">{{index}}月 ({{ props.item.month[index-1] }})</a> -->
                     <router-link
                       v-if="item.month[index-1] > 0"
                       v-bind:to="{ path : 'item', query : { param : JSON.stringify({q: q, collections: collections}), u: u, date: item.year + '-' + index }}"
-                    >{{index}}月 ({{ item.month[index-1] }})</router-link>
-                    <span v-else>{{index}}月</span>
+                    >{{getMonthName(index)}} ({{ item.month[index-1] }})</router-link>
+                    <span v-else>{{getMonthName(index)}}</span>
                   </td>
                 </tr>
               </tbody>
@@ -95,7 +95,8 @@ export default {
     let param = Object.assign({}, this.$route.query);
 
     if (!param.u) {
-      location.href = "https://github.com/nakamura196/calendar";
+      //location.href = "https://github.com/nakamura196/calendar";
+      return
     }
     this.u = param.u;
 
@@ -264,6 +265,16 @@ export default {
       }
 
       return data;
+    },
+    getMonthName(index){
+      if(this.$i18n.locale == "ja"){
+        return index+"月"
+      } else {
+        const month_english_list = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+        return month_english_list[index - 1]
+      }
+      
+      
     }
   }
 };

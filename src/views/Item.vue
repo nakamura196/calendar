@@ -33,19 +33,19 @@
               <v-menu bottom right>
                 <template v-slot:activator="{ on }">
                   <v-btn outlined v-on="on">
-                    <span>{{ typeToLabel[type] }}</span>
+                    <span>{{$t('message.'+typeToLabel[type])}}</span>
                     <v-icon right>mdi-menu-down</v-icon>
                   </v-btn>
                 </template>
                 <v-list>
                   <v-list-item @click="type = 'day'">
-                    <v-list-item-title>Day</v-list-item-title>
+                    <v-list-item-title>{{$t('message.day')}}</v-list-item-title>
                   </v-list-item>
                   <v-list-item @click="type = 'week'">
-                    <v-list-item-title>Week</v-list-item-title>
+                    <v-list-item-title>{{$t('message.week')}}</v-list-item-title>
                   </v-list-item>
                   <v-list-item @click="type = 'month'">
-                    <v-list-item-title>Month</v-list-item-title>
+                    <v-list-item-title>{{$t('message.month')}}</v-list-item-title>
                   </v-list-item>
                   <!-- 
                   <v-list-item @click="type = '4day'">
@@ -68,6 +68,7 @@
               @click:more="viewDay"
               @click:date="viewDay"
               @change="updateRange"
+              :locale="$i18n.locale"
             ></v-calendar>
             <v-menu
               v-model="selectedOpen"
@@ -134,9 +135,9 @@ export default {
       type: "month",
       events: [],
       typeToLabel: {
-        month: "Month",
-        week: "Week",
-        day: "Day"
+        month: "month",
+        week: "week",
+        day: "day",
         //"4day": "4 Days"
       },
       focus: "2000-01-01",
@@ -168,12 +169,26 @@ export default {
 
       switch (this.type) {
         case "month":
-          return `${startMonth} ${startYear}`;
+          if(this.$i18n.locale == "en"){
+            return `${startMonth} ${startYear}`;
+          } else {
+            return `${startYear}年 ${startMonth}`;
+          }
         case "week":
         case "4day":
-          return `${startMonth} ${startDay} ${startYear} - ${suffixMonth} ${endDay} ${suffixYear}`;
+
+          if(this.$i18n.locale == "en"){
+            return `${startMonth} ${startDay} ${startYear} - ${suffixMonth} ${endDay} ${suffixYear}`;
+          } else {
+            return `${startYear}年 ${startMonth} ${startDay} - ${suffixMonth} ${endDay} ${suffixYear}`;
+          }
+          
         case "day":
+          if(this.$i18n.locale == "en"){
           return `${startMonth} ${startDay} ${startYear}`;
+          } else {
+            return `${startYear}年 ${startMonth} ${startDay}`;
+          }
       }
       return "";
     },
@@ -350,9 +365,14 @@ export default {
       this.end = end;
     },
     nth(d) {
-      return d > 3 && d < 21
+      if(this.$i18n.locale == "en"){
+        return d > 3 && d < 21
         ? "th"
         : ["th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"][d % 10];
+      } else {
+        return "日"
+      }
+      
     },
     handleDateClick(arg) {
       window.open(arg.event.id, "_blank");

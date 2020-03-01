@@ -17,14 +17,14 @@
           <v-flex xs12 sm6>
             <v-select
               :items="collections_query"
-              label="コレクション / Collection"
+              :label="$t('message.collection')"
               class="mx-2"
               multiple
               v-model="collections_"
             ></v-select>
           </v-flex>
         </v-layout>
-        <v-btn color="primary" @click="search">Search</v-btn>
+        <v-btn color="primary" @click="search">{{$t('message.search')}}</v-btn>
       </v-form>
     </v-card-text>
   </v-card>
